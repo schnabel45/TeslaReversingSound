@@ -1,0 +1,128 @@
+<html>
+    <head>
+        <style>
+            html{
+                width: 100%;
+                height: 100%;
+            }
+            body{
+                width: 100%;
+                height: 100%;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+        </style>
+        <script type="text/javascript">
+            var audioCtx;
+            var tones;
+            var volume;
+            var lowTone = [313, 377];
+            var highTone = [1253, 1352];
+            var currentFrequencies = [lowTone[0] - 3, lowTone[0] + 3, highTone[0] - 3, highTone[0] + 3];
+            
+            var scale = function(number, inMin, inMax, outMin, outMax){
+                return (number - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+            }
+
+            var setupTones = function(){
+                console.log("creating tones");
+
+                audioCtx = new AudioContext();
+
+                volume = audioCtx.createGain();
+                volume.gain.value = 0.05;
+                volume.connect(audioCtx.destination);
+
+                tones = new Array();
+
+                currentFrequencies.forEach(function(item){
+                    var tone = audioCtx.createOscillator();
+                    tone.type = 'sine';
+                    tone.frequency.value = item;
+                    tone.connect(volume);
+                    tones.push(tone);
+                })
+            }
+
+            var startTone = function(){
+                if(tones == null){
+                    setupTones();
+                }
+
+                console.log("starting tones");
+                
+                document.getElementById("reversingSpeedSelector").removeAttribute("disabled");
+
+                tones.forEach(function(item, i){
+                    console.log(i + ":" + item.frequency.value);
+                    item.start();
+                })
+            }
+
+            var stopTone = function(){
+                console.log("stopping tones");
+
+                document.getElementById("reversingSpeedSelector").value = 0;
+                updateSpeed(0);
+                document.getElementById("reversingSpeedSelector").setAttribute("disabled", "true");
+                
+                if(tones != null){
+                    tones.forEach(function(item, i){
+                        console.log(i + ":" + item.frequency.value);
+                        item.stop();
+                        item = null;
+                    })
+
+                    setupTones();
+                }
+            }
+
+            var updateSpeed = function(value){
+                document.getElementById("reversingSpeedVal").innerText = value / 10 + " mph.";
+                
+                var sliderMin = document.getElementById("reversingSpeedSelector").min;
+                var sliderMax = document.getElementById("reversingSpeedSelector").max;
+
+                var scaledInput = scale(value, sliderMin, sliderMax, 0, 1);
+                var toneAdjustment = Math.sqrt(scaledInput);
+
+                var newLowTone = scale(toneAdjustment, 0, 1, lowTone[0], lowTone[1]);
+                var newHighTone = scale(toneAdjustment, 0, 1, highTone[0], highTone[1]);
+
+                console.log("SquaredRoot: " + toneAdjustment + ", New low tone: " + newLowTone + ", new high tone: " + newHighTone);
+
+                tones[0].frequency.value = newLowTone - 3;
+                tones[1].frequency.value = newLowTone + 3;
+                tones[2].frequency.value = newHighTone - 3;
+                tones[3].frequency.value = newHighTone + 3;
+            }
+
+
+        </script>
+    </head>
+    <body>
+        <h1>Tesla Reversing Sound Demo</h1>
+        <h3>Theory</h3>
+        <p>
+            The sound is made with the combination of four sine waves grouped into two pairs creating a "wha-wha" effect (sometimes called Beading).
+            This effect is similar to when two instruments are not quite in tune with each other.
+        </p>
+        <h3>Implementation</h3>
+        <p>
+            The two pairs of tones are separated approximately 6hz in real life. This page separates the two tones exactly 6hz as an example.
+            The lower pair are centered between 313hz and go as high as 377hz. The upper pair are centered between 1253hz and 1352hz.
+            My measurements are not accurate, but are close enough to produce a similar effect.
+        </p>
+        <h3>How to use</h3>
+        <p>
+            Start the tone, then adjust the slider. The slider dictates your "speed" being traveled. The speed for this demo is limited to 0-15mph.
+            This demo scales input based on a squarroot function dynamically increasing the change in tone lower in the speed range.
+            This approximates what Tesla does in real life, but is not 100%.
+        </p>
+        <button type="button" onclick="startTone()">Start Tone</button>
+        <button type="button" onclick="stopTone()">Stop Tone</button>
+        <h4>Speed Input</h4>
+        <input type="range" min="0" max="150" value="0" class="slider" id="reversingSpeedSelector" disabled="true" oninput="updateSpeed(this.value)">
+        <p id="reversingSpeedVal"></p>
+        <br/>
+    </body>
+</html>
