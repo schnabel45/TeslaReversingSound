@@ -78,7 +78,8 @@
             }
 
             var updateSpeed = function(value){
-                document.getElementById("reversingSpeedVal").innerText = value / 10 + " mph.";
+                document.getElementById("reversingSpeedValMPH").innerText = value / 10 + " mph.";
+                document.getElementById("reversingSpeedValKPH").innerText = "~" + value * 0.1609344 + " kph.";
                 
                 var sliderMin = document.getElementById("reversingSpeedSelector").min;
                 var sliderMax = document.getElementById("reversingSpeedSelector").max;
@@ -124,7 +125,8 @@
             <button class="btn btn-secondary" type="button" onclick="stopTone()">Stop Tone</button>
             <h4>Speed Input</h4>
             <input class="form-range" type="range" min="0" max="150" value="0" class="slider" id="reversingSpeedSelector" disabled="true" oninput="updateSpeed(this.value)">
-            <p id="reversingSpeedVal"></p>
+            <p id="reversingSpeedValMPH"></p>
+            <p id="reversingSpeedValKPH"></p>
             <br/>
         </div>
     </body>
